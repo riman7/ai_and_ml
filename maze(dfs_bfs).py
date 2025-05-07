@@ -112,19 +112,25 @@ class Maze():
                 result.append((action, (r, c)))
         return result
     
-    def solve(self):
+    def solve(self, strategy="stack"):
         self.num_explored = 0
-        #initialize empty explored set
         self.explored = set()
 
-        start = Node(state = self.start, parent = None, action=None)
-        frontier = StackFrontier()
+        start = Node(state=self.start, parent=None, action=None)
+
+        if strategy == "stack":
+            frontier = StackFrontier()
+        elif strategy == "queue":
+            frontier = QueueFrontier()
+        else:
+            raise ValueError("Unknown strategy. Use 'stack' or 'queue'.")
+
         frontier.add(start)
 
         while True:
             if frontier.empty():
                 raise Exception("No solution")
-            
+
             node = frontier.remove()
             self.num_explored += 1
 
@@ -139,75 +145,30 @@ class Maze():
                 cells.reverse()
                 self.solution = (actions, cells)
                 return
-        
+
             self.explored.add(node.state)
-####
+
             for action, state in self.neighbors(node.state):
                 if not frontier.contains_state(state) and state not in self.explored:
-                    child = Node(state = state, parent= node, action = action)
+                    child = Node(state=state, parent=node, action=action)
                     frontier.add(child)
-
-
-    # def output_image(self, filename, show_solution=True, show_explored=False):
-    #     from PIL import Image, ImageDraw
-    #     cell_size = 50
-    #     cell_border = 2
-
-    #     # Create a blank canvas
-    #     img = Image.new(
-    #         "RGBA",
-    #         (self.width * cell_size, self.height * cell_size),
-    #         "black"
-    #     )
-    #     draw = ImageDraw.Draw(img)
-
-    #     solution = self.solution[1] if self.solution is not None else None
-    #     for i, row in enumerate(self.walls):
-    #         for j, col in enumerate(row):
-
-    #             # Walls
-    #             if col:
-    #                 fill = (40, 40, 40)
-
-    #             # Start
-    #             elif (i, j) == self.start:
-    #                 fill = (255, 0, 0)
-
-    #             # Goal
-    #             elif (i, j) == self.goal:
-    #                 fill = (0, 171, 28)
-
-    #             # Solution
-    #             elif solution is not None and show_solution and (i, j) in solution:
-    #                 fill = (220, 235, 113)
-
-    #             # Explored
-    #             elif solution is not None and show_explored and (i, j) in self.explored:
-    #                 fill = (212, 97, 85)
-
-    #             # Empty cell
-    #             else:
-    #                 fill = (237, 240, 252)
-
-    #             # Draw cell
-    #             draw.rectangle(
-    #                 ([(j * cell_size + cell_border, i * cell_size + cell_border),
-    #                   ((j + 1) * cell_size - cell_border, (i + 1) * cell_size - cell_border)]),
-    #                 fill=fill
-    #             )
-
-    #     img.save(filename)
 
 
 if len(sys.argv) != 2:
     sys.exit("Usage: python maze.py maze.txt")
 
-m = Maze(sys.argv[1])
+dfs = Maze(sys.argv[1])
+bfs = Maze(sys.argv[1])
 print("Maze:")
-m.print()
+dfs.print()
 print("Solving...")
-m.solve()
-print("States Explored:", m.num_explored)
-print("Solution:")
-m.print()
+dfs.solve(strategy="stack")
+bfs.solve(strategy="queue")
+print("DFS States Explored:", dfs.num_explored)
+print("Depth First-Search Solution:")
+dfs.print()
+print("BFS States Explored:", bfs.num_explored)
+print("Breadth First-Search Solution:")
+bfs.print()
+
 # m.output_image("maze.png", show_explored=True)
